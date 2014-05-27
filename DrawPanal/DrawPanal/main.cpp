@@ -17,7 +17,8 @@ void myinit(void)
 	{
 		AllShape[i][0] = new GLfloat[1]{0};
 	}
-	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void drawSquares(GLenum mode)
@@ -90,7 +91,7 @@ void pickSquares(int mouse, int state, int x, int y)
 		AllShape[lenght_AllShape][(int)NumOfPoints(lenght_AllShape)+1] = new GLfloat[2]{(GLfloat)x, (GLfloat)y};
 
 #ifndef NDEBUG
-		printf("AllShape: %d, &f, %f\n", 
+		printf("AllShape: %d, %f, %f\n", 
 			(int) NumOfPoints(lenght_AllShape),
 			AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape) + 1][0],
 			AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape) + 1][1]);
