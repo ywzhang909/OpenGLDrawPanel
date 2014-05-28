@@ -48,7 +48,10 @@ void drawSquares(GLenum mode)
 
 void selectHandler(int *index, int length)
 {
-
+	if (length == 0)
+	{
+		return;
+	}
 	glutPostRedisplay();
 }
 
