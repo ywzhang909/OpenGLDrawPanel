@@ -58,8 +58,15 @@ void drawSquares(GLenum mode)
 			glVertex3fv(AllShape[i][2]);
 			glEnd();
 			break;
-		default:
+		case 3:
 			glBegin(GL_TRIANGLES);
+			glVertex3fv(AllShape[i][1]);
+			glVertex3fv(AllShape[i][2]);
+			glVertex3fv(AllShape[i][3]);
+			glEnd();
+			break;
+		default:
+			glBegin(GL_POLYGON);
 			for (int j = 1; j <= NumOfPoints(i); j++)
 			{
 				glVertex3fv(AllShape[i][j]);
