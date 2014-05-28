@@ -6,6 +6,9 @@
 
 #define MAX 50
 
+const int Width = 800;
+const int Height = 480;
+
 GLfloat* AllShape[MAX][MAX];
 int lenght_AllShape = 0;
 
@@ -17,26 +20,54 @@ void myinit(void)
 	{
 		AllShape[i][0] = new GLfloat[1]{0};
 	}
-	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void drawSquares(GLenum mode)
 {
 	for (int i = 0; i < lenght_AllShape; i++) {
+		if (NumOfPoints(i) < 1)
+		{
+			continue;
+		}
+
 		if (mode == GL_SELECT)
 			glLoadName(i);
 
-		assert(NumOfPoints(i) > 2);
+		glColor3fv(AllShape[i][(int) NumOfPoints(i) + 1]);
 
-		glColor3fv(AllShape[i][(int)NumOfPoints(i)+1]);
+#ifndef NDEBUG
+		printf("Draw: %d,%d, %f, %f\n",
+			i,
+			(int) NumOfPoints(i),
+			AllShape[i][(int) NumOfPoints(i)][0],
+			AllShape[i][(int) NumOfPoints(i)][1]);
+#endif//NDEBUG
 
-		glBegin(GL_POLYGON);
-		for (int j = 1; j <= NumOfPoints(i); j++)
+		switch ((int)NumOfPoints(i))
 		{
-			glVertex3fv(AllShape[i][j]);
+		case 1:
+			glBegin(GL_POINT);
+			glVertex3fv(AllShape[i][1]);
+			glEnd();
+			break;
+		case 2:
+			glBegin(GL_LINE);
+			glVertex3fv(AllShape[i][1]);
+			glVertex3fv(AllShape[i][2]);
+			glEnd();
+			break;
+		default:
+			glBegin(GL_TRIANGLES);
+			for (int j = 1; j <= NumOfPoints(i); j++)
+			{
+				glVertex3fv(AllShape[i][j]);
+			}
+			glEnd();
+			break;
 		}
-		glEnd();
-		
+
 		if (mode == GL_SELECT)
 		{
 			glPopName();
@@ -76,7 +107,7 @@ void processHits(GLint hits, GLuint buffer [])
 
 #define BUFSIZE 512
 
-void pickSquares(int mouse, int state, int x, int y)
+void myMouseFunc(int mouse, int state, int x, int y)
 {
 	if (state != GLUT_DOWN)
 	{
@@ -85,21 +116,19 @@ void pickSquares(int mouse, int state, int x, int y)
 	switch (mouse)
 	{
 	case GLUT_LEFT_BUTTON:
+		NumOfPoints(lenght_AllShape) += 1;
 		assert(NumOfPoints(lenght_AllShape) < MAX - 1);
 
-		AllShape[lenght_AllShape][(int)NumOfPoints(lenght_AllShape)+1] = new GLfloat[2]{(GLfloat)x, (GLfloat)y};
-
-#ifndef NDEBUG
-		printf("AllShape: %d, &f, %f\n", 
-			(int) NumOfPoints(lenght_AllShape),
-			AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape) + 1][0],
-			AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape) + 1][1]);
-
-		NumOfPoints(lenght_AllShape) += 1;
-		break;
-#endif//NDEBUG
+		AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape)] = new GLfloat[3]{(GLfloat) x, (GLfloat) y, 0};
 		
+#ifndef NDEBUG
+		printf("Click: %d, %f, %f\n",
+			(int) NumOfPoints(lenght_AllShape),
+			AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape)][0],
+			AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape)][1]);
+#endif//NDEBUG
 
+		break;
 	case GLUT_RIGHT_BUTTON:
 		GLuint selectBuf[BUFSIZE];
 		GLint hits;
@@ -119,7 +148,7 @@ void pickSquares(int mouse, int state, int x, int y)
 
 		gluPickMatrix((GLdouble) x,
 			(GLdouble) (viewport[3] - y), 5.0, 5.0, viewport);
-		gluOrtho2D(0.0, 3.0, 0.0, 3.0);
+		gluOrtho2D(0.0, Width, 0.0, Height);
 		drawSquares(GL_SELECT);
 		glPopMatrix();
 		glFlush();
@@ -131,16 +160,16 @@ void pickSquares(int mouse, int state, int x, int y)
 	default:
 		break;
 	}
-	
+
 }
 
 void myKeyboardFunc(unsigned char key, int x, int y)
 {
 	if (key == 'a')
 	{
-		AllShape[lenght_AllShape][(int)NumOfPoints(lenght_AllShape)+1] = new GLfloat[3]{0, 0, 0};
+		AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape) + 1] = new GLfloat[3]{(GLfloat)0.3, (GLfloat)0.4, (GLfloat)0.5};
 		lenght_AllShape++;
-		glutPostRedisplay();
+		drawSquares(GL_SELECT);
 	}
 }
 
@@ -150,27 +179,17 @@ void display(void)
 	drawSquares(GL_RENDER);
 }
 
-void myReshape(GLsizei w, GLsizei h)
-{
-	glViewport(0, 0, w, h);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(0.0, 3.0, 0.0, 3.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-}
 
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
 	glutInitWindowPosition(0, 0);
-	glutInitWindowSize(800, 400);
-	myinit();
+	glutInitWindowSize(Width, Height);
 	glutCreateWindow("Draw");
+	myinit();
 	glutDisplayFunc(&display);
-	glutMouseFunc(&pickSquares);
+	glutMouseFunc(&myMouseFunc);
 	glutKeyboardFunc(&myKeyboardFunc);
-	glutReshapeFunc(&myReshape);
 	glutMainLoop();
 
 	return 0;
