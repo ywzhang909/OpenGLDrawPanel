@@ -80,11 +80,27 @@ void drawSquares(GLenum mode)
 			glPopName();
 		}
 	}
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, Width, Height, 0);
+	glMatrixMode(GL_MODELVIEW);
+
 	glFlush();
 }
 
 void selectHandler(int *index, int length)
 {
+	if (length < 1)
+	{
+		return;
+	}
+
+#ifndef NDEBUG
+	printf("select: %d, %d\n", length, index[0]);
+#endif
+//	for (int i = 0; i < length; i++)
+//		NumOfPoints(index[i]) = 0;
 
 	glutPostRedisplay();
 }
@@ -126,7 +142,7 @@ void myMouseFunc(int mouse, int state, int x, int y)
 		NumOfPoints(lenght_AllShape) += 1;
 		assert(NumOfPoints(lenght_AllShape) < MAX - 1);
 
-		AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape)] = new GLfloat[3]{(GLfloat) x, (GLfloat) y, 0};
+		AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape)] = new GLfloat[3]{(GLfloat) x, (GLfloat)y, 0};
 		
 #ifndef NDEBUG
 		printf("Click: %d, %f, %f\n",
@@ -136,6 +152,8 @@ void myMouseFunc(int mouse, int state, int x, int y)
 #endif//NDEBUG
 
 		break;
+
+
 	case GLUT_RIGHT_BUTTON:
 		GLuint selectBuf[BUFSIZE];
 		GLint hits;
@@ -155,7 +173,7 @@ void myMouseFunc(int mouse, int state, int x, int y)
 
 		gluPickMatrix((GLdouble) x,
 			(GLdouble) (viewport[3] - y), 5.0, 5.0, viewport);
-		gluOrtho2D(0.0, Width, 0.0, Height);
+		gluOrtho2D(0.0, Width, Height, 0);
 		drawSquares(GL_SELECT);
 		glPopMatrix();
 		glFlush();
@@ -174,9 +192,11 @@ void myKeyboardFunc(unsigned char key, int x, int y)
 {
 	if (key == 'a')
 	{
-		AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape) + 1] = new GLfloat[3]{(GLfloat)0.3, (GLfloat)0.4, (GLfloat)0.5};
+		AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape) + 1] 
+			= new GLfloat[3]{(GLfloat)0, (GLfloat)0, (GLfloat)1};
 		lenght_AllShape++;
-		drawSquares(GL_SELECT);
+		//drawSquares(GL_SELECT);
+		glutPostRedisplay();
 	}
 }
 
