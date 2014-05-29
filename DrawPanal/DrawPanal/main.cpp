@@ -37,26 +37,11 @@ void drawSquares(GLenum mode)
 
 		glColor3fv(AllShape[i][(int) NumOfPoints(i) + 1]);
 
-#ifndef NDEBUG
-		printf("Draw: %d,%d, %f, %f\n",
-			i,
-			(int) NumOfPoints(i),
-			AllShape[i][(int) NumOfPoints(i)][0],
-			AllShape[i][(int) NumOfPoints(i)][1]);
-#endif//NDEBUG
-
 		switch ((int)NumOfPoints(i))
 		{
+		case 0:
 		case 1:
-			glBegin(GL_POINT);
-			glVertex3fv(AllShape[i][1]);
-			glEnd();
-			break;
 		case 2:
-			glBegin(GL_LINE);
-			glVertex3fv(AllShape[i][1]);
-			glVertex3fv(AllShape[i][2]);
-			glEnd();
 			break;
 		case 3:
 			glBegin(GL_TRIANGLES);
@@ -73,11 +58,6 @@ void drawSquares(GLenum mode)
 			}
 			glEnd();
 			break;
-		}
-
-		if (mode == GL_SELECT)
-		{
-			glPopName();
 		}
 	}
 
@@ -99,8 +79,10 @@ void selectHandler(int *index, int length)
 #ifndef NDEBUG
 	printf("select: %d, %d\n", length, index[0]);
 #endif
-//	for (int i = 0; i < length; i++)
-//		NumOfPoints(index[i]) = 0;
+	for (int i = 0; i < length; i++)
+	{
+		NumOfPoints(index[i]) = 0;
+	}
 
 	glutPostRedisplay();
 }
@@ -117,12 +99,9 @@ void processHits(GLint hits, GLuint buffer [])
 	for (i = 0; i < hits; i++) {
 		names = *ptr;
 		printf(" number of names for this hit = %d\n", names);
-		ptr++;
-		printf(" z1 is %u;", *ptr); ptr++;
-		printf(" z2 is %u\n", *ptr); ptr++;
+		ptr += 3;
 		index[i] = *ptr;
-		printf(" name is %d", *ptr); ptr++;
-		printf("\n");
+		ptr++;
 	}
 
 	selectHandler(index, i);
@@ -143,13 +122,6 @@ void myMouseFunc(int mouse, int state, int x, int y)
 		assert(NumOfPoints(lenght_AllShape) < MAX - 1);
 
 		AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape)] = new GLfloat[3]{(GLfloat) x, (GLfloat)y, 0};
-		
-#ifndef NDEBUG
-		printf("Click: %d, %f, %f\n",
-			(int) NumOfPoints(lenght_AllShape),
-			AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape)][0],
-			AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape)][1]);
-#endif//NDEBUG
 
 		break;
 
@@ -195,7 +167,7 @@ void myKeyboardFunc(unsigned char key, int x, int y)
 		AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape) + 1] 
 			= new GLfloat[3]{(GLfloat)0, (GLfloat)0, (GLfloat)1};
 		lenght_AllShape++;
-		//drawSquares(GL_SELECT);
+
 		glutPostRedisplay();
 	}
 }
