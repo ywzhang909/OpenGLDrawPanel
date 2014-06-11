@@ -1,8 +1,10 @@
-#include <gl/glut.h>
+﻿#include <gl/glut.h>
 #include <stdio.h>
 
 #include <assert.h>
 
+GLfloat Colors[8][3] = { { 0.0, 0.0, 0.0 }, { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 }, { 0.0, 1.0, 1.0 },
+{ 1.0, 0.0, 1.0 }, { 1.0, 1.0, 0.0 }, { 1.0, 1.0, 1.0 } };
 
 #define MAX 50
 
@@ -13,6 +15,10 @@ GLfloat* AllShape[MAX][MAX];
 int lenght_AllShape = 0;
 
 #define NumOfPoints(i) AllShape[(i)][0][0]
+
+bool isMoveMode = false;
+
+int click_x, click_y;
 
 void myinit(void)
 {
@@ -37,7 +43,7 @@ void drawSquares(GLenum mode)
 
 		glColor3fv(AllShape[i][(int) NumOfPoints(i) + 1]);
 
-		switch ((int)NumOfPoints(i))
+		switch ((int) NumOfPoints(i))
 		{
 		case 0:
 		case 1:
@@ -69,107 +75,176 @@ void drawSquares(GLenum mode)
 	glFlush();
 }
 
-void selectHandler(int *index, int length)
-{
-	if (length < 1)
-	{
-		return;
-	}
+int hit_num;
+int* hit_index;
 
-#ifndef NDEBUG
-	printf("select: %d, %d\n", length, index[0]);
-#endif
-	for (int i = 0; i < length; i++)
-	{
-		NumOfPoints(index[i]) = 0;
-	}
-
-	glutPostRedisplay();
-}
+#define CON_DEL 1
+#define CON_COLOR 2
 
 void processHits(GLint hits, GLuint buffer [])
 {
-	GLuint names, *ptr;
+	GLuint *ptr;
 
 	printf("hits = %d\n", hits);
 	ptr = (GLuint *) buffer;
 
-	int i;
-	int *index = new int[hits];
-	for (i = 0; i < hits; i++) {
-		names = *ptr;
-		printf(" number of names for this hit = %d\n", names);
+	hit_num = hits;
+	hit_index = new int[hit_num];
+	for (int i = 0; i < hits; i++) {
 		ptr += 3;
-		index[i] = *ptr;
+		hit_index[i] = *ptr;
 		ptr++;
 	}
 
-	selectHandler(index, i);
+	glutAttachMenu(GLUT_RIGHT_BUTTON);
+}
+
+void myMainMenuFunc(int select)
+{
+	if (hit_num > 0)
+	{
+		switch (select)
+		{
+		case CON_DEL:
+			for (int i = 0; i < hit_num; i++)
+			{
+				NumOfPoints(hit_index[hit_num]) = 0;
+			}
+		default:
+			break;
+		}
+	}
+	glutPostRedisplay();
+}
+
+void mySubMenuFunc(int select)
+{
+	if (hit_num > 0)
+	{
+		for (int i = 0; i < hit_num; i++)
+		{
+			AllShape[i][(int) NumOfPoints(i) + 1] = Colors[select];
+		}
+	}
+	glutPostRedisplay();
 }
 
 #define BUFSIZE 512
 
 void myMouseFunc(int mouse, int state, int x, int y)
 {
-	if (state != GLUT_DOWN)
+
+	if (state == GLUT_UP)
 	{
+		isMoveMode = false;
+		click_x = click_y = 0;
+
 		return;
 	}
-	switch (mouse)
+
+
+	if (state == GLUT_DOWN)
+
+		switch (mouse)
 	{
-	case GLUT_LEFT_BUTTON:
-		NumOfPoints(lenght_AllShape) += 1;
-		assert(NumOfPoints(lenght_AllShape) < MAX - 1);
+		case GLUT_LEFT_BUTTON:
 
-		AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape)] = new GLfloat[3]{(GLfloat) x, (GLfloat)y, 0};
+			NumOfPoints(lenght_AllShape) += 1;
+			if (NumOfPoints(lenght_AllShape) == MAX - 1)
+			{
+				return;
+			}
 
-		break;
+			AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape)] = new GLfloat[3]{(GLfloat) x, (GLfloat) y, 0};
 
+			break;
 
-	case GLUT_RIGHT_BUTTON:
-		GLuint selectBuf[BUFSIZE];
-		GLint hits;
-		GLint viewport[4];
+		case GLUT_MIDDLE_BUTTON:
+			isMoveMode = true;
+			click_x = x;
+			click_y = y;
 
-		glGetIntegerv(GL_VIEWPORT, viewport);
+		case GLUT_RIGHT_BUTTON:
+			GLuint selectBuf[BUFSIZE];
+			GLint hits;
+			GLint viewport[4];
 
-		glSelectBuffer(BUFSIZE, selectBuf);
-		(void) glRenderMode(GL_SELECT);
+			glGetIntegerv(GL_VIEWPORT, viewport);
 
-		glInitNames();
-		glPushName(-1);
+			glSelectBuffer(BUFSIZE, selectBuf);
+			(void) glRenderMode(GL_SELECT);
 
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
+			glInitNames();
+			glPushName(-1);
 
-		gluPickMatrix((GLdouble) x,
-			(GLdouble) (viewport[3] - y), 5.0, 5.0, viewport);
-		gluOrtho2D(0.0, Width, Height, 0);
-		drawSquares(GL_SELECT);
-		glPopMatrix();
-		glFlush();
+			glMatrixMode(GL_PROJECTION);
+			glPushMatrix();
+			glLoadIdentity();
 
-		hits = glRenderMode(GL_RENDER);
-		processHits(hits, selectBuf);
+			gluPickMatrix((GLdouble) x,
+				(GLdouble) (viewport[3] - y), 5.0, 5.0, viewport);
+			gluOrtho2D(0.0, Width, Height, 0);
+			drawSquares(GL_SELECT);
+			glPopMatrix();
+			glFlush();
 
-		break;
-	default:
-		break;
+			hits = glRenderMode(GL_RENDER);
+			processHits(hits, selectBuf);
+
+			break;
+		default:
+			break;
 	}
 
 }
 
 void myKeyboardFunc(unsigned char key, int x, int y)
 {
-	if (key == 'a')
-	{
-		AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape) + 1] 
-			= new GLfloat[3]{(GLfloat)0, (GLfloat)0, (GLfloat)1};
-		lenght_AllShape++;
 
-		glutPostRedisplay();
+	switch (key)
+	{
+	case 'a':
+		if (NumOfPoints(lenght_AllShape) < 3)
+		{
+			NumOfPoints(lenght_AllShape) = 0;
+			return;
+		}
+		AllShape[lenght_AllShape][(int) NumOfPoints(lenght_AllShape) + 1]
+			= new GLfloat[3]{(GLfloat) 0, (GLfloat) 0, (GLfloat) 1};
+		lenght_AllShape++;
+		break;
+	case 'e':
+		//isEditMode = !isEditMode;
+		break;
+	default:
+		break;
 	}
+
+	glutPostRedisplay();
+}
+
+void myMotionFunc(int x, int y)
+{
+	if (hit_num == 0 || !isMoveMode)
+	{
+		return;
+	}
+
+	float dx = x - click_x;
+	click_x = x;
+	float dy = y - click_y;
+	click_y = y;
+
+	for (int i = 0; i < hit_num; i++)
+	{
+		for (int j = 1; j <= NumOfPoints(hit_index[i]); j++)
+		{
+			AllShape[hit_index[i]][j][0] += dx;
+			AllShape[hit_index[i]][j][1] += dy;
+		}
+	}
+
+	glutPostRedisplay();
 }
 
 void display(void)
@@ -189,6 +264,22 @@ int main(int argc, char** argv)
 	glutDisplayFunc(&display);
 	glutMouseFunc(&myMouseFunc);
 	glutKeyboardFunc(&myKeyboardFunc);
+	glutMotionFunc(&myMotionFunc);
+
+	int id_subMenu = glutCreateMenu(&mySubMenuFunc);
+
+	glutAddMenuEntry("Black", 0);
+	glutAddMenuEntry("Red", 1);
+	glutAddMenuEntry("Green", 2);
+	glutAddMenuEntry("Blue", 3);
+	glutAddMenuEntry("Light blue", 4);
+	glutAddMenuEntry("Purple", 5);
+	glutAddMenuEntry("Yellow", 6);
+
+	glutCreateMenu(&myMainMenuFunc);
+	glutAddMenuEntry("Delete", CON_DEL);
+	glutAddSubMenu("Color", id_subMenu);
+
 	glutMainLoop();
 
 	return 0;
