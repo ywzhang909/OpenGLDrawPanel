@@ -76,7 +76,7 @@ void drawSquares(GLenum mode)
 }
 
 int hit_num;
-int* hit_index;
+int hit_index[MAX];
 
 #define CON_DEL 1
 #define CON_COLOR 2
@@ -87,7 +87,6 @@ void processHits(GLint hits, GLuint buffer [])
 	ptr = (GLuint *) buffer;
 
 	hit_num = hits;
-	hit_index = new int[hit_num];
 	for (int i = 0; i < hits; i++) {
 		ptr += 3;
 		hit_index[i] = *ptr;
@@ -107,6 +106,7 @@ void myMainMenuFunc(int select)
 		case CON_DEL:
 			for (int i = 0; i < hit_num; i++)
 			{
+				printf("----Change No.%d Shape-----\n", hit_index[i]);
 				NumOfPoints(hit_index[i]) = 0;
 			}
 		default:
@@ -122,7 +122,7 @@ void mySubMenuFunc(int select)
 	{
 		for (int i = 0; i < hit_num; i++)
 		{
-			AllShape[i][(int) NumOfPoints(i) + 1] = Colors[select];
+			AllShape[hit_index[i]][(int) NumOfPoints(hit_index[i]) + 1] = Colors[select];
 		}
 	}
 	glutPostRedisplay();
