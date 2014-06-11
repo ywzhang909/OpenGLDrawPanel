@@ -84,8 +84,6 @@ int* hit_index;
 void processHits(GLint hits, GLuint buffer [])
 {
 	GLuint *ptr;
-
-	printf("hits = %d\n", hits);
 	ptr = (GLuint *) buffer;
 
 	hit_num = hits;
@@ -93,6 +91,7 @@ void processHits(GLint hits, GLuint buffer [])
 	for (int i = 0; i < hits; i++) {
 		ptr += 3;
 		hit_index[i] = *ptr;
+		printf("----Chosen No.%d Shape-----\n", *ptr);
 		ptr++;
 	}
 
@@ -108,7 +107,7 @@ void myMainMenuFunc(int select)
 		case CON_DEL:
 			for (int i = 0; i < hit_num; i++)
 			{
-				NumOfPoints(hit_index[hit_num]) = 0;
+				NumOfPoints(hit_index[i]) = 0;
 			}
 		default:
 			break;
@@ -164,7 +163,6 @@ void myMouseFunc(int mouse, int state, int x, int y)
 			click_x = x;
 			click_y = y;
 
-		case GLUT_RIGHT_BUTTON:
 			GLuint selectBuf[BUFSIZE];
 			GLint hits;
 			GLint viewport[4];
